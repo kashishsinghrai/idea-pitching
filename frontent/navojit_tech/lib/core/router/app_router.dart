@@ -14,6 +14,7 @@ import '../../features/founder/screens/founder_dashboard_screen.dart';
 import '../../features/founder/screens/pitch_wizard_screen.dart';
 import '../../features/founder/screens/media_upload_screen.dart';
 import '../../features/founder/screens/vdr_manager_screen.dart';
+import '../../features/founder/screens/founder_profile_screen.dart';
 
 import '../../features/investor/screens/investor_shell.dart';
 import '../../features/investor/screens/deal_flow_screen.dart';
@@ -92,6 +93,10 @@ class AppRouter {
           GoRoute(
             path: '/founder/vdr',
             builder: (context, state) => const VdrManagerScreen(),
+          ),
+          GoRoute(
+            path: '/founder/profile',
+            builder: (context, state) => const FounderProfileScreen(),
           ),
         ],
       ),

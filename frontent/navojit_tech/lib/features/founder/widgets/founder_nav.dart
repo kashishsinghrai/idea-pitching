@@ -37,6 +37,11 @@ class FounderNavItems {
       selectedIcon: Icons.folder_special_rounded,
       label: 'VDR',
     ),
+    FounderNavItem(
+      icon: Icons.person_outline,
+      selectedIcon: Icons.person_rounded,
+      label: 'Profile',
+    ),
   ];
 
   static const List<String> routes = [
@@ -44,5 +49,6 @@ class FounderNavItems {
     '/founder/pitch',
     '/founder/media',
     '/founder/vdr',
+    '/founder/profile',
   ];
 }

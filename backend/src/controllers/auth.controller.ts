@@ -63,9 +63,11 @@ export const register = async (req: Request, res: Response) => {
         role: newUser.role,
       }
     });
-  } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ message: 'Internal server error during registration.' });
+  } catch (error: any) {
+    console.error('Registration error CODE:', error?.code);
+    console.error('Registration error MSG:', error?.message);
+    console.error('Registration error FULL:', error);
+    res.status(500).json({ message: error?.message || 'Internal server error during registration.' });
   }
 };
 
@@ -101,8 +103,10 @@ export const login = async (req: Request, res: Response) => {
         role: user.role,
       }
     });
-  } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ message: 'Internal server error during login.' });
+  } catch (error: any) {
+    console.error('Login error CODE:', error?.code);
+    console.error('Login error MSG:', error?.message);
+    console.error('Login error FULL:', error);
+    res.status(500).json({ message: error?.message || 'Internal server error during login.' });
   }
 };

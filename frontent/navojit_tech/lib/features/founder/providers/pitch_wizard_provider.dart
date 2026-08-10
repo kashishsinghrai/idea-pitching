@@ -1,7 +1,9 @@
+import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:navojit_tech/features/founder/models/mock_data.dart';
 import 'package:navojit_tech/features/founder/repositories/pitch_repository.dart';
 import 'package:navojit_tech/features/investor/models/startup_deal.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // ═══════════════════════════════════════════════════════════════════
 // PITCH WIZARD STATE
@@ -264,13 +266,24 @@ final mediaUploadProvider =
 class VdrState {
   final List<VdrDocument> documents;
   final String? selectedCategory; // null = 'All'
+  final bool isLoading;
 
-  const VdrState({required this.documents, this.selectedCategory});
+  const VdrState({
+    required this.documents,
+    this.selectedCategory,
+    this.isLoading = false,
+  });
 
-  VdrState copyWith({List<VdrDocument>? documents, String? selectedCategory}) {
+  VdrState copyWith({
+    List<VdrDocument>? documents,
+    String? selectedCategory,
+    bool? isLoading,
+    bool clearCategory = false,
+  }) {
     return VdrState(
       documents: documents ?? this.documents,
-      selectedCategory: selectedCategory,
+      selectedCategory: clearCategory ? null : (selectedCategory ?? this.selectedCategory),
+      isLoading: isLoading ?? this.isLoading,
     );
   }
 
@@ -289,7 +302,65 @@ class VdrState {
 }
 
 class VdrNotifier extends StateNotifier<VdrState> {
-  VdrNotifier() : super(const VdrState(documents: []));
+  static const _storageKey = 'vdr_documents';
+
+  VdrNotifier() : super(const VdrState(documents: [], isLoading: true)) {
+    _loadFromStorage();
+  }
+
+  // ── Persistence ──────────────────────────────────────────────────
+
+  Future<void> _loadFromStorage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonList = prefs.getStringList(_storageKey) ?? [];
+    final docs = jsonList.map((s) {
+      final map = jsonDecode(s) as Map<String, dynamic>;
+      return VdrDocument(
+        id: map['id'] as String,
+        name: map['name'] as String,
+        category: map['category'] as String,
+        fileType: map['fileType'] as String,
+        sizeMB: (map['sizeMB'] as num).toDouble(),
+        uploadedAt: DateTime.parse(map['uploadedAt'] as String),
+        isLocked: map['isLocked'] as bool? ?? true,
+        viewCount: map['viewCount'] as int? ?? 0,
+        filePath: map['filePath'] as String?,
+      );
+    }).toList();
+    if (mounted) {
+      state = state.copyWith(documents: docs, isLoading: false);
+    }
+  }
+
+  Future<void> _saveToStorage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonList = state.documents.map((d) => jsonEncode({
+      'id': d.id,
+      'name': d.name,
+      'category': d.category,
+      'fileType': d.fileType,
+      'sizeMB': d.sizeMB,
+      'uploadedAt': d.uploadedAt.toIso8601String(),
+      'isLocked': d.isLocked,
+      'viewCount': d.viewCount,
+      'filePath': d.filePath,
+    })).toList();
+    await prefs.setStringList(_storageKey, jsonList);
+  }
+
+  // ── Actions ───────────────────────────────────────────────────────
+
+  void addDocument(VdrDocument doc) {
+    final updated = [...state.documents, doc];
+    state = state.copyWith(documents: updated);
+    _saveToStorage();
+  }
+
+  void deleteDocument(String docId) {
+    final updated = state.documents.where((d) => d.id != docId).toList();
+    state = state.copyWith(documents: updated);
+    _saveToStorage();
+  }
 
   void toggleLock(String docId) {
     final updated = state.documents.map((d) {
@@ -297,16 +368,32 @@ class VdrNotifier extends StateNotifier<VdrState> {
       return d;
     }).toList();
     state = state.copyWith(documents: updated);
+    _saveToStorage();
+  }
+
+  void incrementViewCount(String docId) {
+    final updated = state.documents.map((d) {
+      if (d.id == docId) return d.copyWith(viewCount: d.viewCount + 1);
+      return d;
+    }).toList();
+    state = state.copyWith(documents: updated);
+    _saveToStorage();
   }
 
   void setCategory(String? category) {
-    state = VdrState(
-      documents: state.documents,
-      selectedCategory: category,
-    );
+    if (category == null || category == 'All') {
+      state = state.copyWith(clearCategory: true);
+    } else {
+      state = VdrState(
+        documents: state.documents,
+        selectedCategory: category,
+        isLoading: state.isLoading,
+      );
+    }
   }
 }
 
 final vdrProvider = StateNotifierProvider<VdrNotifier, VdrState>(
   (ref) => VdrNotifier(),
 );
+

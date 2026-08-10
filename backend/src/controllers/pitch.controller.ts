@@ -50,7 +50,7 @@ export const createPitch = async (req: AuthRequest, res: Response): Promise<void
         videoUrl, // new URL string from frontend
         pitchDeckUrl,
         executiveSummaryUrl,
-        status: 'PENDING'
+        status: 'APPROVED' // Changed from PENDING so investors can see it instantly
       }
     });
 

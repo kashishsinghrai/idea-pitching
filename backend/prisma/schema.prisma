@@ -25,6 +25,15 @@ model User {
 
   profile      Profile?
   pitch        Pitch?
+
+  // Investor Relations
+  savedDeals      SavedDeal[]
+  ndaSignatures   NdaSignature[]
+  investments     Investment[]
+  
+  // Messaging
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
 }
 
 model Profile {
@@ -32,8 +41,19 @@ model Profile {
   userId              String   @unique
   firstName           String?
   lastName            String?
-  companyName         String?  // For Founders
-  accreditationStatus String?  // For Investors
+  
+  // Founder / General
+  companyName         String?  
+
+  // Investor Specific
+  firmName            String?
+  role                String?
+  accreditationStatus String?
+
+  // Notifications
+  notifyNewDeals      Boolean  @default(true)
+  notifyMessages      Boolean  @default(true)
+  notifyNdaStatus     Boolean  @default(true)
   
   user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -62,4 +82,67 @@ model Pitch {
   updatedAt    DateTime    @updatedAt
 
   founder      User        @relation(fields: [founderId], references: [id], onDelete: Cascade)
+
+  savedBy       SavedDeal[]
+  ndaSignatures NdaSignature[]
+  investments   Investment[]
+  messages      Message[]
+}
+
+model SavedDeal {
+  id        String   @id @default(uuid())
+  userId    String
+  pitchId   String
+  createdAt DateTime @default(now())
+
+  user      User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pitch     Pitch @relation(fields: [pitchId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, pitchId])
+}
+
+model NdaSignature {
+  id        String   @id @default(uuid())
+  userId    String
+  pitchId   String
+  signedAt  DateTime @default(now())
+  // signatureData String? // optional, if we want to store base64
+
+  user      User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pitch     Pitch @relation(fields: [pitchId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, pitchId])
+}
+
+enum InvestmentStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+model Investment {
+  id         String   @id @default(uuid())
+  investorId String
+  pitchId    String
+  amount     Float
+  equity     Float?
+  status     InvestmentStatus @default(PENDING)
+  createdAt  DateTime @default(now())
+
+  investor   User  @relation(fields: [investorId], references: [id], onDelete: Cascade)
+  pitch      Pitch @relation(fields: [pitchId], references: [id], onDelete: Cascade)
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  senderId   String
+  receiverId String
+  pitchId    String
+  text       String
+  isUnread   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  sender     User  @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver   User  @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  pitch      Pitch @relation(fields: [pitchId], references: [id], onDelete: Cascade)
 }

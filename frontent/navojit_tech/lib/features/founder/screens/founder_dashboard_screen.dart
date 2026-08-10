@@ -9,6 +9,7 @@ import 'package:navojit_tech/features/founder/widgets/stat_card.dart';
 import 'package:navojit_tech/features/auth/providers/auth_provider.dart';
 import 'package:navojit_tech/features/founder/widgets/pitch_status_card.dart';
 import 'package:navojit_tech/features/founder/providers/pitch_wizard_provider.dart';
+import 'package:navojit_tech/shared/widgets/error_card.dart';
 
 /// Founder home dashboard screen.
 /// Mobile: single column stacked. Desktop: single column centered.
@@ -164,11 +165,11 @@ class FounderDashboardScreen extends ConsumerWidget {
           child: CircularProgressIndicator(),
         ),
       ),
-      error: (err, stack) => Center(
-        child: Text(
-          'Error loading pitches: $err',
-          style: const TextStyle(color: Colors.red),
-        ),
+      error: (err, stack) => ErrorCard(
+        title: 'Could not load pitches',
+        message: 'Check your connection and try again.',
+        icon: Icons.rocket_launch_outlined,
+        onRetry: () => ref.invalidate(myPitchesProvider),
       ),
     );
   }
@@ -227,11 +228,11 @@ class FounderDashboardScreen extends ConsumerWidget {
           child: CircularProgressIndicator(),
         ),
       ),
-      error: (err, stack) => const Center(
-        child: Text(
-          'Error loading stats',
-          style: TextStyle(color: Colors.red),
-        ),
+      error: (err, stack) => ErrorCard(
+        title: 'Could not load stats',
+        message: 'Unable to reach the server. Check your connection.',
+        icon: Icons.bar_chart_rounded,
+        onRetry: () => ref.invalidate(myPitchesProvider),
       ),
     );
   }

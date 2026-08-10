@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:navojit_tech/features/investor/models/startup_deal.dart';
 import 'package:navojit_tech/features/investor/providers/deal_flow_provider.dart';
+import 'package:navojit_tech/features/investor/repositories/investor_repository.dart';
 
 class StartupDetailState {
   final StartupDeal? currentStartup;
@@ -32,37 +33,52 @@ class StartupDetailState {
 
 class StartupDetailNotifier extends StateNotifier<StartupDetailState> {
   final List<StartupDeal> _availableStartups;
+  final InvestorRepository _repository;
 
-  StartupDetailNotifier(this._availableStartups) : super(const StartupDetailState());
+  StartupDetailNotifier(this._availableStartups, this._repository) : super(const StartupDetailState());
 
-  void setStartup(String id) {
+  Future<void> setStartup(String id) async {
     if (_availableStartups.isEmpty) return;
     
-    // Look up the startup from the live deal flow data
     final deal = _availableStartups.firstWhere(
       (s) => s.id == id,
       orElse: () => _availableStartups.first,
     );
-    // Reset state for the new startup
-    state = StartupDetailState(currentStartup: deal);
+    
+    state = StartupDetailState(currentStartup: deal, isLoading: true);
+    
+    try {
+      final ndaSigned = await _repository.getNdaStatus(deal.id);
+      state = state.copyWith(hasSignedNda: ndaSigned, isLoading: false);
+    } catch (e) {
+      state = state.copyWith(isLoading: false);
+    }
   }
 
   Future<void> requestVdrAccess() async {
     state = state.copyWith(isLoading: true);
-    // Simulate network delay
+    // VDR Access is a future feature on backend, simulating for now
     await Future.delayed(const Duration(seconds: 1));
     state = state.copyWith(hasRequestedVdr: true, isLoading: false);
   }
 
   Future<void> signNda() async {
+    final dealId = state.currentStartup?.id;
+    if (dealId == null) return;
+
     state = state.copyWith(isLoading: true);
-    // Simulate network delay
-    await Future.delayed(const Duration(seconds: 2));
-    state = state.copyWith(hasSignedNda: true, isLoading: false);
+    
+    try {
+      await _repository.signNda(dealId);
+      state = state.copyWith(hasSignedNda: true, isLoading: false);
+    } catch (e) {
+      state = state.copyWith(isLoading: false);
+    }
   }
 }
 
 final startupDetailProvider = StateNotifierProvider<StartupDetailNotifier, StartupDetailState>((ref) {
   final dealFlowState = ref.watch(dealFlowProvider);
-  return StartupDetailNotifier(dealFlowState.startups);
+  final repo = ref.watch(investorRepositoryProvider);
+  return StartupDetailNotifier(dealFlowState.startups, repo);
 });

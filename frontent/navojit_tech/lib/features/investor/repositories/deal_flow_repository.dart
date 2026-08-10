@@ -7,7 +7,7 @@ class DealFlowRepository {
   final FlutterSecureStorage _secureStorage;
 
   // Ensure this points to the physical device's IPv4 or the local loopback for emulators
-  static const String _baseUrl = 'http://10.180.96.80:5000/api/pitches';
+  static const String _baseUrl = 'http://localhost:5000/api/pitches';
 
   DealFlowRepository()
       : _dio = Dio(BaseOptions(

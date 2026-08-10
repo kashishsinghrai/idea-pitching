@@ -134,6 +134,7 @@ class VdrDocument {
   final DateTime uploadedAt;
   final bool isLocked;
   final int viewCount;
+  final String? filePath; // local file path on disk
 
   const VdrDocument({
     required this.id,
@@ -144,9 +145,10 @@ class VdrDocument {
     required this.uploadedAt,
     this.isLocked = true,
     this.viewCount = 0,
+    this.filePath,
   });
 
-  VdrDocument copyWith({bool? isLocked}) {
+  VdrDocument copyWith({bool? isLocked, int? viewCount, String? filePath}) {
     return VdrDocument(
       id: id,
       name: name,
@@ -155,7 +157,8 @@ class VdrDocument {
       sizeMB: sizeMB,
       uploadedAt: uploadedAt,
       isLocked: isLocked ?? this.isLocked,
-      viewCount: viewCount,
+      viewCount: viewCount ?? this.viewCount,
+      filePath: filePath ?? this.filePath,
     );
   }
 }

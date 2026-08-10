@@ -6,8 +6,8 @@ class PitchRepository {
   final Dio _dio;
   final FlutterSecureStorage _secureStorage;
 
-  // Use the IPv4 address for physical device testing
-  static const String _baseUrl = 'http://10.180.96.80:5000/api/pitches';
+  // Windows desktop: use localhost. For physical device testing, use your machine's LAN IP.
+  static const String _baseUrl = 'http://localhost:5000/api/pitches';
 
   PitchRepository()
       : _dio = Dio(BaseOptions(

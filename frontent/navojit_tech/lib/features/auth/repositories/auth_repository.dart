@@ -5,8 +5,8 @@ class AuthRepository {
   final Dio _dio;
   final FlutterSecureStorage _secureStorage;
 
-  // Since testing on a physical device, use the local IPv4 address
-  static const String _baseUrl = 'http://10.180.96.80:5000/api/auth';
+  // Windows desktop: use localhost. For physical device testing, use your machine's LAN IP (e.g. http://10.180.96.80:5000/api/auth)
+  static const String _baseUrl = 'http://localhost:5000/api/auth';
 
   AuthRepository()
       : _dio = Dio(BaseOptions(
